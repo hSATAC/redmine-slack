@@ -40,7 +40,7 @@ class SlackListener < Redmine::Hook::Listener
 		msg = "#{escape journal.user.to_s} updated #{escape issue.project} <#{object_url issue}|#{escape issue}>"
 
     extra = get_status_and_assignee_update_from_details(journal.details)
-    msg += "(#{extra[:status]})" unless extra[:status].nil?
+    msg += " (#{extra[:status]})" unless extra[:status].nil?
     msg += " assigned to #{extra[:assignee]}" unless extra[:assignee].nil?
 
 		attachment = {}
