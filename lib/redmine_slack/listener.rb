@@ -8,7 +8,7 @@ class SlackListener < Redmine::Hook::Listener
 
 		return unless channel
 
-		msg = "[#{escape issue.project}] #{escape issue.author} created <#{object_url issue}|#{escape issue}>"
+		msg = "#{escape issue.author} created #{escape issue.project} <#{object_url issue}|#{escape issue}>"
 
 		attachment = {}
 		#attachment[:text] = escape issue.description if issue.description
@@ -37,7 +37,7 @@ class SlackListener < Redmine::Hook::Listener
 
 		return unless channel
 
-		msg = "[#{escape issue.project}] #{escape journal.user.to_s} updated <#{object_url issue}|#{escape issue}>"
+		msg = "#{escape journal.user.to_s} updated #{escape issue.project} <#{object_url issue}|#{escape issue}>"
 
     extra = get_status_and_assignee_update_from_details(journal.details)
     msg += "(#{extra[:status]})" unless extra[:status].nil?
