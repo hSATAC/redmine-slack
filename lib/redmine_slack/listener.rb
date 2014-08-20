@@ -11,20 +11,20 @@ class SlackListener < Redmine::Hook::Listener
 		msg = "[#{escape issue.project}] #{escape issue.author} created <#{object_url issue}|#{escape issue}>"
 
 		attachment = {}
-		attachment[:text] = escape issue.description if issue.description
-		attachment[:fields] = [{
-			:title => I18n.t("field_status"),
-			:value => escape(issue.status.to_s),
-			:short => true
-		}, {
-			:title => I18n.t("field_priority"),
-			:value => escape(issue.priority.to_s),
-			:short => true
-		}, {
-			:title => I18n.t("field_assigned_to"),
-			:value => escape(issue.assigned_to.to_s),
-			:short => true
-		}]
+		#attachment[:text] = escape issue.description if issue.description
+		#attachment[:fields] = [{
+			#:title => I18n.t("field_status"),
+			#:value => escape(issue.status.to_s),
+			#:short => true
+		#}, {
+			#:title => I18n.t("field_priority"),
+			#:value => escape(issue.priority.to_s),
+			#:short => true
+		#}, {
+			#:title => I18n.t("field_assigned_to"),
+			#:value => escape(issue.assigned_to.to_s),
+			#:short => true
+		#}]
 
 		speak msg, channel, attachment
 	end
@@ -39,9 +39,13 @@ class SlackListener < Redmine::Hook::Listener
 
 		msg = "[#{escape issue.project}] #{escape journal.user.to_s} updated <#{object_url issue}|#{escape issue}>"
 
+    extra = get_status_and_assignee_update_from_details(journal.details)
+    msg += "(#{extra[:status]})" unless extra[:status].nil?
+    msg += " assigned to #{extra[:assignee]}" unless extra[:assignee].nil?
+
 		attachment = {}
-		attachment[:text] = escape journal.notes if journal.notes
-		attachment[:fields] = journal.details.map { |d| detail_to_field d }
+		#attachment[:text] = escape journal.notes if journal.notes
+		#attachment[:fields] = journal.details.map { |d| detail_to_field d }
 
 		speak msg, channel, attachment
 	end
@@ -99,6 +103,36 @@ private
 			nil
 		end
 	end
+
+	def get_status_and_assignee_update_from_details(details)
+	  ret_status = nil
+	  ret_assignee = nil
+	  details.each do |detail|
+      if detail.property == "cf"
+        next
+      elsif detail.property == "attachment"
+        next
+      else
+        key = detail.prop_key.to_s.sub("_id", "")
+        title = I18n.t "field_#{key}"
+      end
+
+      value = escape detail.value.to_s
+
+      case key
+      when "status"
+        status = IssueStatus.find(detail.value) rescue nil
+        value = escape status.to_s
+        ret_status = value
+      when "assigned_to"
+        user = User.find(detail.value) rescue nil
+        value = escape user.to_s
+        ret_assignee = value
+      end
+    end
+
+    return {:status => ret_status, :assignee => ret_assignee}
+  end
 
 	def detail_to_field(detail)
 		if detail.property == "cf"
